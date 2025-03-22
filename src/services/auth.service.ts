@@ -39,20 +39,28 @@ export class AuthService implements IAuthService {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
+        cache: "no-store",
       });
 
       if (!response.ok) {
-        throw new Error("Login failed");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.message ||
+            `Login failed: ${response.status} ${response.statusText}`
+        );
       }
 
       const data = await response.json();
 
-      // Guardar en localStorage
-      localStorage.setItem(this.tokenKey, data.access_token);
-      if (data.refresh_token) {
-        localStorage.setItem(this.refreshTokenKey, data.refresh_token);
+      // Solo ejecutar localStorage en el cliente
+      if (typeof window !== "undefined") {
+        // Guardar en localStorage
+        localStorage.setItem(this.tokenKey, data.access_token);
+        if (data.refresh_token) {
+          localStorage.setItem(this.refreshTokenKey, data.refresh_token);
+        }
+        localStorage.setItem(this.userKey, JSON.stringify(data.user));
       }
-      localStorage.setItem(this.userKey, JSON.stringify(data.user));
 
       return data;
     } catch (error) {
@@ -69,18 +77,26 @@ export class AuthService implements IAuthService {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ refresh_token: refreshToken }),
+        cache: "no-store",
       });
 
       if (!response.ok) {
-        throw new Error("Token refresh failed");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.message ||
+            `Token refresh failed: ${response.status} ${response.statusText}`
+        );
       }
 
       const data = await response.json();
 
-      // Actualizar tokens
-      localStorage.setItem(this.tokenKey, data.access_token);
-      if (data.refresh_token) {
-        localStorage.setItem(this.refreshTokenKey, data.refresh_token);
+      // Solo ejecutar localStorage en el cliente
+      if (typeof window !== "undefined") {
+        // Actualizar tokens
+        localStorage.setItem(this.tokenKey, data.access_token);
+        if (data.refresh_token) {
+          localStorage.setItem(this.refreshTokenKey, data.refresh_token);
+        }
       }
 
       return data;
@@ -92,9 +108,12 @@ export class AuthService implements IAuthService {
   }
 
   logout(): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.refreshTokenKey);
-    localStorage.removeItem(this.userKey);
+    // Solo ejecutar localStorage en el cliente
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(this.tokenKey);
+      localStorage.removeItem(this.refreshTokenKey);
+      localStorage.removeItem(this.userKey);
+    }
   }
 
   isAuthenticated(): boolean {

@@ -1,31 +1,46 @@
+"use client";
+
 // src/app/[lang]/print/page.tsx
-// Versión imprimible del CV
-import { useCV } from "@/hooks/useCV";
+import React, { useState, useEffect } from "react";
+import { Locale } from "@/i18n/config";
 import { Loading } from "@/components/ui/Loading";
 import { PrintLayout } from "@/components/layouts/PrintLayout";
-import { useTranslation } from "next-i18next";
-import { serverSideTranslations } from "next-i18next/serverSideTranslations";
+import { useI18n } from "@/i18n/Provider";
+import { cvService } from "@/services/cv.service";
+import { CVData } from "@/types/cv.types";
 
-export async function getStaticPaths() {
-  return {
-    paths: [{ params: { lang: "es" } }, { params: { lang: "en" } }],
-    fallback: false,
+export const dynamic = "force-static";
+
+interface PrintablePageProps {
+  params: {
+    lang: Locale;
   };
 }
 
-export async function getStaticProps({ params }) {
+export default function PrintablePage({ params }: PrintablePageProps) {
   const { lang } = params;
+  const { t, loadNamespaces } = useI18n();
+  const [cvData, setCvData] = useState<CVData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  return {
-    props: {
-      ...(await serverSideTranslations(lang, ["common"])),
-    },
-  };
-}
+  // Cargar datos del CV
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const data = await cvService.getCVData(lang);
+        setCvData(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error("An error occurred"));
+      } finally {
+        setLoading(false);
+      }
+    };
 
-export default function PrintableCVPage() {
-  const { t } = useTranslation("common");
-  const { cvData, loading, error } = useCV();
+    fetchData();
+  }, [lang]);
 
   if (loading) {
     return <Loading />;

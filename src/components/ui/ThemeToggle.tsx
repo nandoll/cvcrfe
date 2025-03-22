@@ -1,17 +1,22 @@
+"use client";
+
 // src/components/ui/ThemeToggle.tsx
 import React, { useContext } from "react";
 import { ThemeContext } from "@/components/context/ThemeContext";
-import { useTranslation } from "next-i18next";
+import { useI18n } from "@/i18n/Provider";
 
 export const ThemeToggle: React.FC = () => {
   const { theme, toggleTheme } = useContext(ThemeContext);
-  const { t } = useTranslation("common");
+  const { t } = useI18n();
 
   return (
     <button
       onClick={toggleTheme}
       className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
       aria-label={
+        theme === "dark" ? t("theme.switchToLight") : t("theme.switchToDark")
+      }
+      title={
         theme === "dark" ? t("theme.switchToLight") : t("theme.switchToDark")
       }
     >
@@ -22,6 +27,7 @@ export const ThemeToggle: React.FC = () => {
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -37,6 +43,7 @@ export const ThemeToggle: React.FC = () => {
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"

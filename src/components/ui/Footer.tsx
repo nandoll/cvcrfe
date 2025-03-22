@@ -1,10 +1,12 @@
+"use client";
+
 // src/components/ui/Footer.tsx
 import React from "react";
 import Link from "next/link";
-import { useTranslation } from "next-i18next";
+import { useI18n } from "@/i18n/Provider";
 
 export const Footer: React.FC = () => {
-  const { t } = useTranslation("common");
+  const { t, locale } = useI18n();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -13,7 +15,7 @@ export const Footer: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-6 md:mb-0">
             <Link
-              href={`/${t("locale")}`}
+              href={`/${locale}`}
               className="text-2xl font-bold text-indigo-600 hover:text-indigo-800 transition"
             >
               Fernando Antezana
@@ -25,19 +27,19 @@ export const Footer: React.FC = () => {
 
           <div className="flex flex-wrap justify-center gap-4 md:gap-8">
             <Link
-              href={`/${t("locale")}`}
+              href={`/${locale}`}
               className="text-gray-700 hover:text-indigo-600 transition dark:text-gray-300 dark:hover:text-indigo-400"
             >
               Home
             </Link>
             <Link
-              href={`/${t("locale")}/print`}
+              href={`/${locale}/print`}
               className="text-gray-700 hover:text-indigo-600 transition dark:text-gray-300 dark:hover:text-indigo-400"
             >
               {t("actions.printView")}
             </Link>
             <Link
-              href={`/${t("locale")}/dashboard`}
+              href={`/${locale}/dashboard`}
               className="text-gray-700 hover:text-indigo-600 transition dark:text-gray-300 dark:hover:text-indigo-400"
             >
               Dashboard

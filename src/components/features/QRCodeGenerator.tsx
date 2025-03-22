@@ -1,13 +1,20 @@
+"use client";
+
 // src/components/features/QRCodeGenerator.tsx
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/router";
-import { useTranslation } from "next-i18next";
+import { usePathname } from "next/navigation";
 import { QRCodeCanvas } from "qrcode.react";
 import { analyticsService } from "@/services/analytics.service";
+import { useI18n } from "@/i18n/Provider";
+import { Locale } from "@/i18n/config";
 
-export const QRCodeGenerator: React.FC = () => {
-  const { t } = useTranslation("common");
-  const router = useRouter();
+interface QRCodeGeneratorProps {
+  lang: Locale;
+}
+
+export const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({ lang }) => {
+  const { t } = useI18n();
+  const pathname = usePathname();
   const [url, setUrl] = useState<string>("");
   const [trackingId, setTrackingId] = useState<string>("");
   const [qrUrl, setQrUrl] = useState<string>("");
@@ -27,19 +34,22 @@ export const QRCodeGenerator: React.FC = () => {
 
     // Construir la URL completa
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-    const fullUrl = `${baseUrl}${router.asPath}?source=${id}`;
+    const fullUrl = `${baseUrl}${pathname}?source=${id}`;
     setUrl(fullUrl);
     setQrUrl(fullUrl);
-  }, [router.asPath]);
+  }, [pathname]);
 
   useEffect(() => {
     // Detectar si el acceso proviene de un código QR
-    const { source } = router.query;
-    if (source && typeof source === "string" && source.startsWith("qr-")) {
-      // Registrar el escaneo de QR
-      analyticsService.trackQRScan(source);
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const source = urlParams.get("source");
+      if (source && typeof source === "string" && source.startsWith("qr-")) {
+        // Registrar el escaneo de QR
+        analyticsService.trackQRScan(source);
+      }
     }
-  }, [router.query]);
+  }, []);
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(qrUrl);
@@ -64,7 +74,7 @@ export const QRCodeGenerator: React.FC = () => {
 
   const getQRUrl = () => {
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-    const path = router.asPath.split("?")[0]; // Remove existing query params
+    const path = pathname.split("?")[0]; // Remove existing query params
 
     switch (activeTab) {
       case "linkedin":
@@ -129,7 +139,6 @@ export const QRCodeGenerator: React.FC = () => {
           size={200}
           level="H"
           includeMargin={true}
-          // renderAs="canvas"
           imageSettings={{
             src: "/assets/logo-small.png",
             height: 40,

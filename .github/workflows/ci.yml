@@ -1,3 +1,4 @@
+# .github/workflows/ci.yml
 name: CI/CD Pipeline
 
 on:
@@ -7,53 +8,156 @@ on:
     branches: [main, develop]
 
 jobs:
-  build:
+  lint-and-test:
+    name: 🧪 Lint and Test
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18.x"
+          node-version: "20"
           cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint || true
+      - name: Check code formatting
+        run: npm run format -- --check
 
-      - name: Build
+      - name: Lint code
+        run: npm run lint
+
+      - name: Type check
+        run: npm run check-types
+
+      - name: Run tests
+        run: npm test
+
+  build:
+    name: 🏗️ Build
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Build application
         run: npm run build
 
-      - name: Test
-        run: npm test || true
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-output
+          path: .next/
+          retention-days: 7
 
-  deploy:
-    if: github.ref == 'refs/heads/main'
+  analyze:
+    name: 🧮 Analyze bundle
     needs: build
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18.x"
+          node-version: "20"
           cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Generate Prisma client
+        run: npx prisma generate
 
-      # Despliegue (ejemplo para Vercel)
-      - name: Deploy to Vercel
-        run: |
-          echo "Deployment to production would happen here"
-          # Aquí agregarías los comandos específicos para tu plataforma de despliegue
-          # Por ejemplo, usando Vercel:
-          # npm install -g vercel
-          # vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Analyze bundle size
+        run: npm run analyze
+        env:
+          ANALYZE: true
+
+  deploy-preview:
+    name: 🚀 Deploy Preview
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-output
+          path: .next/
+
+      - name: Deploy to Vercel Preview
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  deploy-production:
+    name: 🚀 Deploy Production
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-output
+          path: .next/
+
+      - name: Deploy to Vercel Production
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: "--prod"

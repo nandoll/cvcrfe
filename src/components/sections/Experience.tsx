@@ -1,9 +1,9 @@
-// src/components/sections/Experience.tsx
-// Componente para la sección de experiencia (Ejemplo de un componente de sección)
+"use client";
 
+// src/components/sections/Experience.tsx
 import React from "react";
 import { Experience } from "@/types/cv.types";
-import { useTranslation } from "next-i18next";
+import { useI18n } from "@/i18n/Provider";
 
 interface ExperienceSectionProps {
   experiences: Experience[];
@@ -13,7 +13,7 @@ interface ExperienceSectionProps {
 const ExperienceItem: React.FC<{ experience: Experience }> = ({
   experience,
 }) => {
-  const { t } = useTranslation("common");
+  const { t } = useI18n();
 
   return (
     <div className="mb-6">
@@ -38,6 +38,25 @@ const ExperienceItem: React.FC<{ experience: Experience }> = ({
           </li>
         ))}
       </ul>
+
+      {/* Mostrar tecnologías si están disponibles */}
+      {experience.technologies && experience.technologies.length > 0 && (
+        <div className="mt-3">
+          <span className="text-sm font-medium">
+            {t("experience.technologies")}:{" "}
+          </span>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {experience.technologies.map((tech, idx) => (
+              <span
+                key={idx}
+                className="px-2 py-0.5 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 text-xs rounded"
+              >
+                {tech}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -46,7 +65,7 @@ const ExperienceItem: React.FC<{ experience: Experience }> = ({
 export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
   experiences,
 }) => {
-  const { t } = useTranslation("common");
+  const { t } = useI18n();
 
   return (
     <section id="experience" className="py-8">
@@ -54,9 +73,13 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({
         {t("experience.title")}
       </h2>
       <div>
-        {experiences.map((exp, index) => (
-          <ExperienceItem key={index} experience={exp} />
-        ))}
+        {experiences.length > 0 ? (
+          experiences.map((exp, index) => (
+            <ExperienceItem key={index} experience={exp} />
+          ))
+        ) : (
+          <p className="text-gray-500 italic">No experience data available</p>
+        )}
       </div>
     </section>
   );

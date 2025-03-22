@@ -1,29 +1,35 @@
+"use client";
+
 // src/components/layouts/PrintLayout.tsx
 import React, { ReactNode, useEffect } from "react";
-import Head from "next/head";
-import { useTranslation } from "next-i18next";
+import { useI18n } from "@/i18n/Provider";
 
 interface PrintLayoutProps {
   children: ReactNode;
 }
 
 export const PrintLayout: React.FC<PrintLayoutProps> = ({ children }) => {
-  const { t } = useTranslation("common");
+  const { t } = useI18n();
 
   // Configuración específica para la versión imprimible
   useEffect(() => {
+    // Solo ejecutar en el cliente
+    if (typeof document === "undefined") return;
+
     // Establecer título del documento
     document.title = `${t("print.title")} - Fernando Antezana`;
 
     // Autoimpresión opcional (desactivada por defecto)
-    const urlParams = new URLSearchParams(window.location.search);
-    const autoPrint = urlParams.get("autoPrint");
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const autoPrint = urlParams.get("autoPrint");
 
-    if (autoPrint === "true") {
-      // Pequeño retraso para asegurar que los estilos se cargan
-      setTimeout(() => {
-        window.print();
-      }, 1000);
+      if (autoPrint === "true") {
+        // Pequeño retraso para asegurar que los estilos se cargan
+        setTimeout(() => {
+          window.print();
+        }, 1000);
+      }
     }
 
     // Añadir clase específica para impresión al body
@@ -37,33 +43,29 @@ export const PrintLayout: React.FC<PrintLayoutProps> = ({ children }) => {
 
   return (
     <>
-      <Head>
-        <meta name="robots" content="noindex" />
-        {/* Estilos específicos para impresión */}
-        <style>{`
-          @page {
-            size: A4;
+      <style jsx global>{`
+        @page {
+          size: A4;
+          margin: 0;
+        }
+        @media print {
+          body {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .print-version {
+            width: 210mm;
+            height: 297mm;
             margin: 0;
+            padding: 0;
+            background: white;
+            color: black;
           }
-          @media print {
-            body {
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            .print-version {
-              width: 210mm;
-              height: 297mm;
-              margin: 0;
-              padding: 0;
-              background: white;
-              color: black;
-            }
-            .no-print {
-              display: none !important;
-            }
+          .no-print {
+            display: none !important;
           }
-        `}</style>
-      </Head>
+        }
+      `}</style>
 
       <div className="print-container">
         <div className="max-w-[210mm] mx-auto bg-white shadow-none py-6">

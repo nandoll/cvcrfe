@@ -1,18 +1,17 @@
-// src/components/layouts/MainLayout.tsx
-// Layout principal (Patrón Decorator aplicado a páginas)
+"use client";
 
+// src/components/layouts/MainLayout.tsx
 import React, { ReactNode, useEffect } from "react";
-import Head from "next/head";
 import { Header } from "@/components/ui/Header";
 import { Footer } from "@/components/ui/Footer";
-import { ThemeProvider } from "@/components/context/ThemeContext";
 import { cvService } from "@/services/cv.service";
+import { AccessibilityMenu } from "@/components/ui/AccessibilityMenu";
 
 interface MainLayoutProps {
   children: ReactNode;
   title?: string;
   description?: string;
-  source?: string;
+  source?: string | null;
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({
@@ -23,27 +22,17 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
   // Tracking de visitas
   useEffect(() => {
-    cvService.trackVisit(source);
+    cvService.trackVisit(source || undefined);
   }, [source]);
 
   return (
-    <ThemeProvider>
-      <div className="min-h-screen flex flex-col">
-        <Head>
-          <title>{title}</title>
-          <meta name="description" content={description} />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
+    <div className="min-h-screen flex flex-col">
+      <Header />
 
-        <Header />
+      <main className="flex-grow container mx-auto px-4 py-8">{children}</main>
 
-        <main className="flex-grow container mx-auto px-4 py-8">
-          {children}
-        </main>
-
-        <Footer />
-      </div>
-    </ThemeProvider>
+      <AccessibilityMenu />
+      <Footer />
+    </div>
   );
 };

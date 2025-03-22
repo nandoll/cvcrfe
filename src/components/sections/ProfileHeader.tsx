@@ -1,16 +1,20 @@
+"use client";
+
 // src/components/sections/ProfileHeader.tsx
 import React from "react";
 import Image from "next/image";
-import { useTranslation } from "next-i18next";
 import { ContactInfo } from "@/types/cv.types";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { useI18n } from "@/i18n/Provider";
+import { Locale } from "@/i18n/config";
 
 interface ProfileHeaderProps {
   name: string;
   title: string;
   summary: string;
   contact: ContactInfo;
+  lang: Locale;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
@@ -18,8 +22,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   title,
   summary,
   contact,
+  lang,
 }) => {
-  const { t } = useTranslation("common");
+  const { t } = useI18n();
 
   return (
     <header className="flex flex-col md:flex-row items-center md:items-start gap-6 py-6">
@@ -36,7 +41,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
         <div className="flex gap-2 mt-4">
           <ThemeToggle />
-          <LanguageSwitcher />
+          <LanguageSwitcher currentLang={lang} />
         </div>
       </div>
 
@@ -49,7 +54,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
           <div className="flex gap-2">
             <a
-              href={`/api/generate-pdf?lang=${t("locale")}`}
+              href={`/api/generate-pdf?lang=${lang}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition"
@@ -74,7 +79,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </a>
 
             <a
-              href={`/${t("locale")}/print`}
+              href={`/${lang}/print`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"

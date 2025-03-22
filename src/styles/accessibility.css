@@ -1,0 +1,162 @@
+/* src/styles/accessibility.css */
+
+/* Clase para alto contraste */
+.high-contrast {
+  /* Aumentar contraste y saturación */
+  filter: contrast(1.4);
+
+  /* Asegurar elementos legibles */
+  --color-text-high-contrast: #000000;
+  --color-background-high-contrast: #ffffff;
+  --color-link-high-contrast: #0000ee;
+  --color-visited-high-contrast: #551a8b;
+
+  /* Restablece cualquier filtro de color para evitar problemas */
+  color-scheme: only light;
+}
+
+.high-contrast body {
+  background-color: var(--color-background-high-contrast);
+  color: var(--color-text-high-contrast);
+}
+
+.high-contrast a {
+  color: var(--color-link-high-contrast);
+}
+
+.high-contrast a:visited {
+  color: var(--color-visited-high-contrast);
+}
+
+/* Eliminar todos los fondos que puedan interferir con la lectura */
+.high-contrast h1,
+.high-contrast h2,
+.high-contrast h3,
+.high-contrast h4,
+.high-contrast h5,
+.high-contrast h6 {
+  background-color: transparent !important;
+  color: var(--color-text-high-contrast) !important;
+}
+
+/* Aumentar el contraste de los bordes */
+.high-contrast button,
+.high-contrast input,
+.high-contrast select,
+.high-contrast textarea {
+  border: 2px solid var(--color-text-high-contrast) !important;
+}
+
+/* Clase para reducir movimiento */
+.reduce-motion * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Clase para aumentar tamaño de fuente */
+.increase-font {
+  font-size: 1.2rem !important;
+}
+
+.increase-font h1 {
+  font-size: 2.5rem !important;
+}
+
+.increase-font h2 {
+  font-size: 2rem !important;
+}
+
+.increase-font h3 {
+  font-size: 1.75rem !important;
+}
+
+.increase-font h4 {
+  font-size: 1.5rem !important;
+}
+
+.increase-font h5 {
+  font-size: 1.25rem !important;
+}
+
+.increase-font h6 {
+  font-size: 1.1rem !important;
+}
+
+.increase-font p,
+.increase-font li,
+.increase-font blockquote {
+  font-size: 1.2rem !important;
+  line-height: 1.6 !important;
+}
+
+.increase-font button,
+.increase-font input,
+.increase-font select,
+.increase-font textarea {
+  font-size: 1.1rem !important;
+}
+
+/* Clase para resaltar foco del teclado */
+.focus-visible :focus {
+  outline: 3px solid #4c68d7 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px rgba(76, 104, 215, 0.2) !important;
+  border-radius: 2px !important;
+}
+
+/* Estilos para Hover generales mejorados */
+@media (hover: hover) {
+  /* Enlaces */
+  a:hover {
+    text-decoration: underline;
+  }
+
+  /* Botones */
+  button:hover:not([disabled]),
+  [role="button"]:hover:not([disabled]) {
+    cursor: pointer;
+  }
+}
+
+/* Mejoras de enfoque para teclado */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Mejoras para lectores de pantalla */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only-focusable:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
