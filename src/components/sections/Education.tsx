@@ -1,6 +1,10 @@
+"use client";
+
+// src/components/sections/Education.tsx
 import React from "react";
 import { Education } from "@/types/cv.types";
-import { useTranslation } from "next-i18next";
+import { useI18n } from "@/i18n/Provider";
+import { AnimatedSection } from "@/components/ui/AnimatedSection";
 
 interface EducationSectionProps {
   education: Education[];
@@ -9,7 +13,7 @@ interface EducationSectionProps {
 export const EducationSection: React.FC<EducationSectionProps> = ({
   education,
 }) => {
-  const { t } = useTranslation("common");
+  const { t } = useI18n();
 
   return (
     <section id="education" className="py-8">
@@ -17,20 +21,33 @@ export const EducationSection: React.FC<EducationSectionProps> = ({
         {t("education.title")}
       </h2>
       <div className="space-y-6">
-        {education.map((item, index) => (
-          <div key={index} className="group">
-            <div className="flex justify-between items-start">
-              <h3 className="text-xl font-bold group-hover:text-indigo-600 transition-colors">
-                {item.institution}
-              </h3>
-              <span className="text-sm text-gray-600">
-                {item.startDate} - {item.endDate}
-              </span>
-            </div>
-            <p className="text-lg text-indigo-600 mt-1">{item.degree}</p>
-            <p className="mt-1 text-gray-700">{item.field}</p>
-          </div>
-        ))}
+        {education.length > 0 ? (
+          education.map((item, index) => (
+            <AnimatedSection
+              key={index}
+              animationType="slide-up"
+              delay={index * 100}
+              className="group"
+            >
+              <div className="flex justify-between items-start">
+                <h3 className="text-xl font-bold group-hover:text-indigo-600 transition-colors">
+                  {item.institution}
+                </h3>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {item.startDate} - {item.endDate}
+                </span>
+              </div>
+              <p className="text-lg text-indigo-600 dark:text-indigo-400 mt-1">
+                {item.degree}
+              </p>
+              <p className="mt-1 text-gray-700 dark:text-gray-300">
+                {item.field}
+              </p>
+            </AnimatedSection>
+          ))
+        ) : (
+          <p className="text-gray-500 italic">No education data available</p>
+        )}
       </div>
     </section>
   );

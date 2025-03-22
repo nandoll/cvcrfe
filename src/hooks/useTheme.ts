@@ -1,3 +1,5 @@
+"use client";
+
 // src/hooks/useTheme.ts
 import { useState, useEffect } from "react";
 
@@ -18,6 +20,9 @@ export const useTheme = () => {
   useEffect(() => {
     setIsMounted(true);
 
+    // Solo ejecutar en el cliente
+    if (typeof window === "undefined") return;
+
     const savedTheme = localStorage.getItem("theme") as Theme | null;
 
     if (savedTheme) {
@@ -32,7 +37,7 @@ export const useTheme = () => {
 
   // Aplicar tema al documento
   useEffect(() => {
-    if (!isMounted) return;
+    if (!isMounted || typeof document === "undefined") return;
 
     document.documentElement.classList.remove("light", "dark");
     document.documentElement.classList.add(theme);

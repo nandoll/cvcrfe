@@ -1,14 +1,16 @@
+"use client";
+
 // src/components/ui/Header.tsx
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { useTranslation } from "next-i18next";
+import { usePathname } from "next/navigation";
+import { useI18n } from "@/i18n/Provider";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export const Header: React.FC = () => {
-  const { t } = useTranslation("common");
-  const router = useRouter();
+  const { t, locale } = useI18n();
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -50,7 +52,7 @@ export const Header: React.FC = () => {
       <div className="container mx-auto px-4 flex justify-between items-center">
         <div className="flex items-center">
           <Link
-            href={`/${t("locale")}`}
+            href={`/${locale}`}
             className="text-xl font-bold text-indigo-600 hover:text-indigo-800 transition"
           >
             FA
@@ -71,15 +73,15 @@ export const Header: React.FC = () => {
 
           <div className="flex items-center gap-2 ml-4">
             <ThemeToggle />
-            <LanguageSwitcher />
+            <LanguageSwitcher currentLang={locale} />
           </div>
 
-          <a
-            href={`/${t("locale")}/dashboard`}
+          <Link
+            href={`/${locale}/dashboard`}
             className="ml-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
           >
             Dashboard
-          </a>
+          </Link>
         </nav>
 
         {/* Botón de menú móvil */}
@@ -142,14 +144,14 @@ export const Header: React.FC = () => {
               </button>
             ))}
 
-            <LanguageSwitcher />
+            <LanguageSwitcher currentLang={locale} />
 
-            <a
-              href={`/${t("locale")}/dashboard`}
+            <Link
+              href={`/${locale}/dashboard`}
               className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition text-center"
             >
               Dashboard
-            </a>
+            </Link>
           </nav>
         </div>
       )}

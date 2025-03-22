@@ -1,3 +1,5 @@
+"use client";
+
 // src/components/context/ThemeContext.tsx
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 
@@ -19,9 +21,15 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>("light");
+  const [mounted, setMounted] = useState(false);
 
   // Inicializar tema desde localStorage o preferencia del sistema
   useEffect(() => {
+    setMounted(true);
+
+    // Solo ejecutar en el cliente
+    if (typeof window === "undefined") return;
+
     const savedTheme = localStorage.getItem("theme") as Theme | null;
 
     if (savedTheme) {
@@ -36,14 +44,22 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   // Aplicar tema al documento
   useEffect(() => {
+    if (!mounted || typeof document === "undefined") return;
+
     document.documentElement.classList.remove("light", "dark");
     document.documentElement.classList.add(theme);
     localStorage.setItem("theme", theme);
-  }, [theme]);
+  }, [theme, mounted]);
 
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
   };
+
+  // No renderizar nada hasta que el tema se haya determinado
+  // Esto evita el parpadeo durante la hidratación
+  if (!mounted) {
+    return <>{children}</>;
+  }
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>

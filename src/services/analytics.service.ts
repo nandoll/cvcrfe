@@ -37,14 +37,19 @@ export class AnalyticsService implements IAnalyticsService {
       const response = await fetch(
         `${this.apiBaseUrl}/analytics/stats?startDate=${startDate}&endDate=${endDate}`,
         {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
+          cache: "no-store", // No cachear stats para tener datos actualizados
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch analytics data");
+        throw new Error(
+          `Failed to fetch analytics data: ${response.status} ${response.statusText}`
+        );
       }
 
       return await response.json();
@@ -56,8 +61,11 @@ export class AnalyticsService implements IAnalyticsService {
   }
 
   async trackQRScan(qrId: string): Promise<void> {
+    // Solo ejecutar en el cliente
+    if (typeof window === "undefined") return;
+
     try {
-      await fetch(`${this.apiBaseUrl}/analytics/qr-scan`, {
+      const response = await fetch(`${this.apiBaseUrl}/analytics/qr-scan`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -67,10 +75,22 @@ export class AnalyticsService implements IAnalyticsService {
           timestamp: new Date().toISOString(),
           userAgent: navigator.userAgent,
           referrer: document.referrer || "direct",
+          path: window.location.pathname,
+          screen: {
+            width: window.screen.width,
+            height: window.screen.height,
+          },
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to track QR scan: ${response.status} ${response.statusText}`
+        );
+      }
     } catch (error) {
       console.error("Error tracking QR scan:", error);
+      // No reintentamos, simplemente fallamos silenciosamente
     }
   }
 
@@ -84,12 +104,16 @@ export class AnalyticsService implements IAnalyticsService {
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
+          cache: "no-store", // No cachear stats para tener datos actualizados
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch campaign data");
+        throw new Error(
+          `Failed to fetch campaign data: ${response.status} ${response.statusText}`
+        );
       }
 
       return await response.json();

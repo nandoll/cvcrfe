@@ -1,3 +1,5 @@
+"use client";
+
 // src/hooks/useAnimation.ts
 import { useEffect, useState, useRef } from "react";
 
@@ -22,12 +24,28 @@ export const useAnimation = ({
   const [isVisible, setIsVisible] = useState(false);
   const elementRef = useRef<HTMLElement | null>(null);
   const hasAnimated = useRef(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
+    // Solo ejecutar en el cliente
+    if (
+      typeof window === "undefined" ||
+      typeof IntersectionObserver === "undefined"
+    ) {
+      setIsVisible(true); // Fallback: hacer visible si IntersectionObserver no está disponible
+      return;
+    }
+
     const currentElement = elementRef.current;
     if (!currentElement) return;
 
-    const observer = new IntersectionObserver(
+    // Limpiar observer anterior si existe
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    // Crear nuevo observer
+    observerRef.current = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
 
@@ -36,7 +54,7 @@ export const useAnimation = ({
 
           if (triggerOnce) {
             hasAnimated.current = true;
-            observer.disconnect();
+            observerRef.current?.disconnect();
           }
         } else if (!triggerOnce && hasAnimated.current) {
           setIsVisible(false);
@@ -48,11 +66,11 @@ export const useAnimation = ({
       }
     );
 
-    observer.observe(currentElement);
+    observerRef.current.observe(currentElement);
 
     return () => {
-      if (currentElement) {
-        observer.unobserve(currentElement);
+      if (observerRef.current) {
+        observerRef.current.disconnect();
       }
     };
   }, [threshold, rootMargin, triggerOnce]);

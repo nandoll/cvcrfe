@@ -1,45 +1,46 @@
 // src/middleware.ts
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { match } from "@formatjs/intl-localematcher";
 import Negotiator from "negotiator";
+import { defaultLocale, locales, getLocalePartsFrom } from "./i18n/config";
 
-// Lista de idiomas soportados
-const locales = ["es", "en"];
-const defaultLocale = "es";
+function getLocale(request: NextRequest): string {
+  const negotiatorHeaders: Record<string, string> = {};
+  request.headers.forEach((value, key) => (negotiatorHeaders[key] = value));
 
-// Función para obtener el idioma preferido
-function getLocale(request: NextRequest) {
-  // Simular el objeto headers de Negotiator usando los headers de NextRequest
-  const headers = {
-    "accept-language": request.headers.get("accept-language") || "",
-  };
-  const negotiator = new Negotiator({ headers });
-  const languages = negotiator.languages();
-
+  const languages = new Negotiator({ headers: negotiatorHeaders }).languages();
   return match(languages, locales, defaultLocale);
 }
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Verificar si ya está accediendo a una ruta de idioma
-  const pathnameHasLocale = locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  );
+  // Omitir rutas estáticas, API y internamente usadas por Next.js
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname.includes("/static/") ||
+    pathname.includes(".") // archivos estáticos
+  ) {
+    return NextResponse.next();
+  }
 
-  if (pathnameHasLocale) return NextResponse.next();
+  // Verificar si la URL ya tiene un locale válido
+  const { locale, pathname: pathnameWithoutLocale } =
+    getLocalePartsFrom(pathname);
 
-  // Redirigir a la ruta con el idioma por defecto (o el detectado)
-  const locale = getLocale(request);
-  const newUrl = new URL(`/${locale}${pathname}`, request.url);
+  if (locale) {
+    // Si el locale ya está en la URL, no hacer nada
+    return NextResponse.next();
+  }
 
-  return NextResponse.redirect(newUrl);
+  // Determinar el locale preferido del usuario
+  const locale2 = getLocale(request);
+
+  // Redirigir a la URL con locale
+  return NextResponse.redirect(new URL(`/${locale2}${pathname}`, request.url));
 }
 
 export const config = {
-  matcher: [
-    // Excluir rutas que no necesitan ser procesadas
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)",
-  ],
+  matcher: ["/((?!_next|api|.*\\..*).*)"],
 };

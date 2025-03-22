@@ -1,9 +1,11 @@
+"use client";
+
 // src/components/sections/EnhancedExperience.tsx
 // Versión mejorada de Experience con animaciones
 
 import React from "react";
 import { Experience } from "@/types/cv.types";
-import { useTranslation } from "next-i18next";
+import { useI18n } from "@/i18n/Provider";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
 
 interface ExperienceSectionProps {
@@ -15,7 +17,7 @@ const ExperienceItem: React.FC<{
   experience: Experience;
   index: number;
 }> = ({ experience, index }) => {
-  const { t } = useTranslation("common");
+  const { t } = useI18n();
 
   return (
     <AnimatedSection
@@ -82,7 +84,7 @@ const ExperienceItem: React.FC<{
 export const EnhancedExperienceSection: React.FC<ExperienceSectionProps> = ({
   experiences,
 }) => {
-  const { t } = useTranslation("common");
+  const { t } = useI18n();
 
   return (
     <section id="experience" className="py-12">
@@ -96,9 +98,13 @@ export const EnhancedExperienceSection: React.FC<ExperienceSectionProps> = ({
       </AnimatedSection>
 
       <div className="mt-6">
-        {experiences.map((exp, index) => (
-          <ExperienceItem key={index} experience={exp} index={index} />
-        ))}
+        {experiences.length > 0 ? (
+          experiences.map((exp, index) => (
+            <ExperienceItem key={index} experience={exp} index={index} />
+          ))
+        ) : (
+          <p className="text-gray-500 italic">No experience data available</p>
+        )}
       </div>
     </section>
   );
