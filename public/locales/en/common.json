@@ -1,0 +1,96 @@
+{
+  "locale": "en",
+  "language": {
+    "current": "English",
+    "switch": "Switch language"
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "actions": {
+    "downloadPDF": "Download PDF",
+    "printView": "Print view",
+    "contactMe": "Contact me",
+    "goBack": "Go back",
+    "readMore": "Read more"
+  },
+  "summary": "Summary",
+  "remote": "Remote",
+  "experience": {
+    "title": "Professional Experience",
+    "subtitle": "My professional journey and work experience",
+    "present": "Present",
+    "technologies": "Technologies used"
+  },
+  "education": {
+    "title": "Education"
+  },
+  "skills": {
+    "title": "Technical Skills",
+    "categories": {
+      "frontend": "Frontend",
+      "backend": "Backend",
+      "devops": "DevOps",
+      "tools": "Tools"
+    }
+  },
+  "languages": {
+    "title": "Languages"
+  },
+  "softSkills": {
+    "title": "Soft Skills"
+  },
+  "contact": {
+    "title": "Contact",
+    "email": "Email",
+    "phone": "Phone",
+    "form": {
+      "name": "Name",
+      "email": "Email",
+      "message": "Message",
+      "send": "Send message",
+      "sending": "Sending...",
+      "success": "Message sent successfully!",
+      "error": "Error sending message. Please try again."
+    }
+  },
+  "qrCode": {
+    "title": "QR Code",
+    "description": "Scan this QR code to visit my online CV or easily share it.",
+    "download": "Download QR",
+    "tabs": {
+      "cv": "Online CV",
+      "linkedin": "LinkedIn",
+      "github": "GitHub"
+    }
+  },
+  "print": {
+    "title": "Printable CV",
+    "printButton": "Print",
+    "closeButton": "Close"
+  },
+  "accessibility": {
+    "title": "Accessibility Options",
+    "toggleMenu": "Toggle accessibility menu",
+    "closeMenu": "Close accessibility menu",
+    "highContrast": "High contrast",
+    "reduceMotion": "Reduce motion",
+    "increaseFontSize": "Larger text",
+    "keyboardFocus": "Keyboard focus highlight",
+    "resetAll": "Reset all options",
+    "skipToContent": "Skip to main content"
+  },
+  "errors": {
+    "loading": "Error loading data",
+    "tryAgain": "Please try reloading the page",
+    "defaultTitle": "An error occurred",
+    "defaultMessage": "Please try again later",
+    "retry": "Retry"
+  },
+  "footer": {
+    "allRightsReserved": "All rights reserved",
+    "builtWith": "Built with",
+    "using": "using"
+  }
+}
