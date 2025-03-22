@@ -1,0 +1,33 @@
+{
+  "title": "Dashboard de Analíticas",
+  "description": "Estadísticas de visitas del CV online",
+  "loginTitle": "Acceso al Dashboard",
+  "email": "Email",
+  "password": "Contraseña",
+  "loginButton": "Iniciar sesión",
+  "loggingIn": "Iniciando sesión...",
+  "logoutButton": "Cerrar sesión",
+  "refreshButton": "Actualizar datos",
+  "dateRange": "Rango de fechas",
+  "startDate": "Fecha inicial",
+  "endDate": "Fecha final",
+  "applyFilter": "Aplicar filtro",
+  "loading": "Cargando...",
+  "noData": "No hay datos disponibles para el período seleccionado",
+  "totalVisits": "Visitas totales",
+  "uniqueVisitors": "Visitantes únicos",
+  "avgTimeOnPage": "Tiempo promedio",
+  "qrScans": "Escaneos QR",
+  "visitsSource": "Fuentes de tráfico",
+  "visitsCountry": "Visitas por país",
+  "deviceDistribution": "Distribución de dispositivos",
+  "qrCodeScans": "Escaneos por código QR",
+  "visitsOverTime": "Visitas a lo largo del tiempo",
+  "visitsOverTimeDesc": "Número de visitas diarias durante el período seleccionado",
+  "visits": "Visitas",
+  "scans": "Escaneos",
+  "errors": {
+    "loginFailed": "Error de autenticación. Verifique sus credenciales.",
+    "dataFetch": "Error al cargar los datos. Intente nuevamente."
+  }
+}

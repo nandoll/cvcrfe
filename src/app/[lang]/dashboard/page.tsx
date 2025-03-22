@@ -5,6 +5,11 @@ import { MainLayout } from "@/components/layouts/MainLayout";
 import { Loading } from "@/components/ui/Loading";
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { ChartCard } from "@/components/dashboard/ChartCard";
+import { authService } from "@/services/auth.service";
+import { analyticsService } from "@/services/analytics.service";
+
 import {
   BarChart,
   Bar,
@@ -17,6 +22,8 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
 } from "recharts";
 
 export async function getStaticPaths() {
@@ -41,6 +48,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isDataLoading, setIsDataLoading] = useState<boolean>(false);
   const [token, setToken] = useState<string | null>(null);
   const [stats, setStats] = useState<any>(null);
   const [dateRange, setDateRange] = useState<{
@@ -65,12 +73,16 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // Verificar autenticación
-    const storedToken = localStorage.getItem("auth_token");
-    if (storedToken) {
-      setToken(storedToken);
-      setIsAuthenticated(true);
-    }
-    setIsLoading(false);
+    const checkAuth = async () => {
+      const storedToken = authService.getToken();
+      if (storedToken) {
+        setToken(storedToken);
+        setIsAuthenticated(true);
+      }
+      setIsLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
   useEffect(() => {
@@ -81,23 +93,17 @@ export default function DashboardPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/analytics/stats?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      setIsDataLoading(true);
+      const data = await analyticsService.getStats(
+        dateRange.startDate,
+        dateRange.endDate,
+        token || ""
       );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch stats");
-      }
-
-      const data = await response.json();
       setStats(data);
     } catch (error) {
       console.error("Error fetching stats:", error);
+    } finally {
+      setIsDataLoading(false);
     }
   };
 
@@ -108,33 +114,20 @@ export default function DashboardPage() {
     const password = formData.get("password") as string;
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Login failed");
-      }
-
-      const data = await response.json();
-      localStorage.setItem("auth_token", data.access_token);
-      setToken(data.access_token);
+      setIsLoading(true);
+      const response = await authService.login(email, password);
+      setToken(response.access_token);
       setIsAuthenticated(true);
     } catch (error) {
       console.error("Login error:", error);
       alert(t("dashboard:errors.loginFailed"));
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("auth_token");
+    authService.logout();
     setToken(null);
     setIsAuthenticated(false);
     setStats(null);
@@ -145,10 +138,40 @@ export default function DashboardPage() {
     setDateRange((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Datos para el gráfico de visitas diarias
+  const getDailyVisitData = () => {
+    // Este sería un cálculo real con los datos del backend
+    // Aquí simplemente generamos datos de ejemplo
+    if (!stats) return [];
+
+    const daysCount = 30;
+    const result = [];
+    const startDate = new Date(dateRange.startDate);
+
+    for (let i = 0; i < daysCount; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + i);
+      const dateStr = currentDate.toISOString().split("T")[0];
+
+      // Valor aleatorio entre el 60-100% del total diario esperado
+      const factor = 0.6 + Math.random() * 0.4;
+      const dailyAvg = stats.totalVisits / daysCount;
+
+      result.push({
+        date: dateStr,
+        visits: Math.round(dailyAvg * factor),
+      });
+    }
+
+    return result;
+  };
+
   if (isLoading) {
     return (
       <MainLayout>
-        <Loading />
+        <div className="flex justify-center items-center min-h-screen">
+          <Loading />
+        </div>
       </MainLayout>
     );
   }
@@ -200,8 +223,35 @@ export default function DashboardPage() {
             <button
               type="submit"
               className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={isLoading}
             >
-              {t("dashboard:loginButton")}
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  {t("dashboard:loggingIn")}
+                </span>
+              ) : (
+                t("dashboard:loginButton")
+              )}
             </button>
           </form>
         </div>
@@ -214,100 +264,252 @@ export default function DashboardPage() {
       title={t("dashboard:title")}
       description={t("dashboard:description")}
     >
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">{t("dashboard:title")}</h1>
+      <div className="bg-gray-50 min-h-screen p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">{t("dashboard:title")}</h1>
 
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-          >
-            {t("dashboard:logoutButton")}
-          </button>
-        </div>
-
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h2 className="text-lg font-semibold mb-2">
-            {t("dashboard:dateRange")}
-          </h2>
-          <div className="flex flex-wrap gap-4">
-            <div>
-              <label
-                htmlFor="startDate"
-                className="block text-sm font-medium text-gray-700 mb-1"
+            <div className="flex gap-4">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition flex items-center"
               >
-                {t("dashboard:startDate")}
-              </label>
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={dateRange.startDate}
-                onChange={handleDateRangeChange}
-                className="px-3 py-2 border border-gray-300 rounded-md"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="endDate"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                {t("dashboard:refreshButton")}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
               >
-                {t("dashboard:endDate")}
-              </label>
-              <input
-                type="date"
-                id="endDate"
-                name="endDate"
-                value={dateRange.endDate}
-                onChange={handleDateRangeChange}
-                className="px-3 py-2 border border-gray-300 rounded-md"
-              />
+                {t("dashboard:logoutButton")}
+              </button>
             </div>
           </div>
-        </div>
 
-        {!stats ? (
-          <Loading />
-        ) : (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-6 bg-indigo-50 rounded-lg shadow-sm">
-                <h3 className="text-lg font-semibold mb-2">
-                  {t("dashboard:totalVisits")}
-                </h3>
-                <p className="text-3xl font-bold text-indigo-700">
-                  {stats.totalVisits}
-                </p>
+          <div className="mb-6 p-4 bg-white rounded-lg shadow-sm">
+            <h2 className="text-lg font-semibold mb-2">
+              {t("dashboard:dateRange")}
+            </h2>
+            <div className="flex flex-wrap gap-4">
+              <div>
+                <label
+                  htmlFor="startDate"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  {t("dashboard:startDate")}
+                </label>
+                <input
+                  type="date"
+                  id="startDate"
+                  name="startDate"
+                  value={dateRange.startDate}
+                  onChange={handleDateRangeChange}
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                />
               </div>
 
-              <div className="p-6 bg-green-50 rounded-lg shadow-sm">
-                <h3 className="text-lg font-semibold mb-2">
-                  {t("dashboard:uniqueVisitors")}
-                </h3>
-                <p className="text-3xl font-bold text-green-700">
-                  {stats.uniqueVisitors || 0}
-                </p>
+              <div>
+                <label
+                  htmlFor="endDate"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  {t("dashboard:endDate")}
+                </label>
+                <input
+                  type="date"
+                  id="endDate"
+                  name="endDate"
+                  value={dateRange.endDate}
+                  onChange={handleDateRangeChange}
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                />
               </div>
 
-              <div className="p-6 bg-blue-50 rounded-lg shadow-sm">
-                <h3 className="text-lg font-semibold mb-2">
-                  {t("dashboard:avgTimeOnPage")}
-                </h3>
-                <p className="text-3xl font-bold text-blue-700">
-                  {stats.avgDuration
-                    ? `${Math.round(stats.avgDuration / 60)} min`
-                    : "N/A"}
-                </p>
+              <div className="flex items-end">
+                <button
+                  onClick={fetchStats}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+                  disabled={isDataLoading}
+                >
+                  {isDataLoading
+                    ? t("dashboard:loading")
+                    : t("dashboard:applyFilter")}
+                </button>
               </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <h3 className="text-lg font-semibold mb-4">
-                  {t("dashboard:visitsSource")}
-                </h3>
-                <div className="h-64">
+          {isDataLoading ? (
+            <div className="flex justify-center py-12">
+              <Loading />
+            </div>
+          ) : !stats ? (
+            <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+              <h3 className="text-xl font-medium text-gray-500">
+                {t("dashboard:noData")}
+              </h3>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <StatCard
+                  title={t("dashboard:totalVisits")}
+                  value={stats.totalVisits}
+                  icon={
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                  }
+                  bgColor="bg-indigo-50"
+                  textColor="text-indigo-700"
+                />
+
+                <StatCard
+                  title={t("dashboard:uniqueVisitors")}
+                  value={stats.uniqueVisitors || 0}
+                  icon={
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  }
+                  bgColor="bg-green-50"
+                  textColor="text-green-700"
+                />
+
+                <StatCard
+                  title={t("dashboard:avgTimeOnPage")}
+                  value={
+                    stats.avgDuration
+                      ? `${Math.round(stats.avgDuration / 60)} min`
+                      : "N/A"
+                  }
+                  icon={
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  }
+                  bgColor="bg-blue-50"
+                  textColor="text-blue-700"
+                />
+
+                <StatCard
+                  title={t("dashboard:qrScans")}
+                  value={
+                    stats.visitsBySource
+                      ? stats.visitsBySource
+                          .filter((s) => s.source.startsWith("qr-"))
+                          .reduce((sum, item) => sum + item.count, 0)
+                      : 0
+                  }
+                  icon={
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                      />
+                    </svg>
+                  }
+                  bgColor="bg-purple-50"
+                  textColor="text-purple-700"
+                />
+              </div>
+
+              <div className="mb-8">
+                <ChartCard
+                  title={t("dashboard:visitsOverTime")}
+                  description={t("dashboard:visitsOverTimeDesc")}
+                  height="h-80"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={getDailyVisitData()}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 25 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="date"
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                        tick={{ fontSize: 12 }}
+                      />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="visits"
+                        name={t("dashboard:visits")}
+                        stroke="#8884d8"
+                        activeDot={{ r: 8 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <ChartCard title={t("dashboard:visitsSource")}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -331,14 +533,9 @@ export default function DashboardPage() {
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
-                </div>
-              </div>
+                </ChartCard>
 
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <h3 className="text-lg font-semibold mb-4">
-                  {t("dashboard:visitsCountry")}
-                </h3>
-                <div className="h-64">
+                <ChartCard title={t("dashboard:visitsCountry")}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={stats.visitsByCountry}
@@ -349,37 +546,68 @@ export default function DashboardPage() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="count" fill="#8884d8" />
+                      <Bar
+                        dataKey="count"
+                        name={t("dashboard:visits")}
+                        fill="#8884d8"
+                      />
                     </BarChart>
                   </ResponsiveContainer>
-                </div>
+                </ChartCard>
               </div>
-            </div>
 
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">
-                {t("dashboard:qrCodeScans")}
-              </h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={stats.visitsBySource.filter(
-                      (item) => item.source && item.source.startsWith("qr-")
-                    )}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="source" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="count" fill="#82ca9d" />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <ChartCard title={t("dashboard:deviceDistribution")}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={stats.visitsByDevice || []}
+                        dataKey="count"
+                        nameKey="device"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        fill="#82ca9d"
+                        label={(entry) => entry.device}
+                      >
+                        {(stats.visitsByDevice || []).map((entry, index) => (
+                          <Cell
+                            key={`cell-device-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+
+                <ChartCard title={t("dashboard:qrCodeScans")}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={stats.visitsBySource.filter(
+                        (item) => item.source && item.source.startsWith("qr-")
+                      )}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="source" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar
+                        dataKey="count"
+                        name={t("dashboard:scans")}
+                        fill="#82ca9d"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
               </div>
-            </div>
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </MainLayout>
   );

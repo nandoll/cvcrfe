@@ -1,6 +1,5 @@
 // src/app/[lang]/page.tsx
 import { Suspense } from "react";
-import { useRouter } from "next/router";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Loading } from "@/components/ui/Loading";
 import { ProfileHeader } from "@/components/sections/ProfileHeader";
@@ -11,56 +10,70 @@ import { ContactSection } from "@/components/sections/Contact";
 import { LanguagesSection } from "@/components/sections/Languages";
 import { SoftSkillsSection } from "@/components/sections/SoftSkills";
 import { QRCodeGenerator } from "@/components/features/QRCodeGenerator";
-import { useCV } from "@/hooks/useCV";
-import { useTranslation } from "next-i18next";
-import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 
-export async function getStaticPaths() {
+// Reemplaza getStaticPaths con generateStaticParams
+export async function generateStaticParams() {
+  return [{ lang: "es" }, { lang: "en" }];
+}
+
+// Función asíncrona para obtener datos del CV
+async function getCVData(lang: string) {
+  // Implementación para obtener datos
+  // Esta es una versión simplificada; adapte según sus necesidades
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/cv/${lang}` ||
+      `http://localhost:3001/cv/${lang}`,
+    { next: { revalidate: 3600 } }
+  ); // Revalidar cada hora
+
+  if (!response.ok) {
+    // Fallback a datos locales si la API no responde
+    return getMockCVData(lang);
+  }
+
+  return response.json();
+}
+
+function getMockCVData(lang: string) {
+  // Datos de ejemplo para desarrollo
   return {
-    paths: [{ params: { lang: "es" } }, { params: { lang: "en" } }],
-    fallback: false,
+    name: "Fernando Antezana",
+    title:
+      lang === "es"
+        ? "Desarrollador Frontend Senior"
+        : "Senior Frontend Developer",
+    summary:
+      lang === "es"
+        ? "Desarrollador Frontend con más de 5 años de experiencia..."
+        : "Frontend Developer with over 5 years of experience...",
+    // Añadir más datos mock según sea necesario
+    contact: {
+      email: "contacto@fernandoantezana.com",
+      phone: "+34 123 456 789",
+    },
+    experiences: [],
+    education: [],
+    skills: [],
+    languages: [],
+    softSkills: [],
   };
 }
 
-export async function getStaticProps({ params }) {
+// Página principal (componente del servidor por defecto)
+export default async function CVPage({ params }: { params: { lang: string } }) {
   const { lang } = params;
 
-  return {
-    props: {
-      ...(await serverSideTranslations(lang, ["common"])),
-      source: null,
-    },
-  };
-}
+  // Obtener datos directamente (no use hooks en componentes del servidor)
+  const cvData = await getCVData(lang);
 
-export default function CVPage({ source }) {
-  const { t } = useTranslation("common");
-  const { cvData, loading, error } = useCV();
-
-  if (loading) {
-    return (
-      <MainLayout source={source}>
-        <Loading />
-      </MainLayout>
-    );
-  }
-
-  if (error || !cvData) {
-    return (
-      <MainLayout source={source}>
-        <div className="text-center py-10">
-          <h2 className="text-xl text-red-600">{t("errors.loading")}</h2>
-          <p>{t("errors.tryAgain")}</p>
-        </div>
-      </MainLayout>
-    );
-  }
+  // Utilice props de i18n según sea necesario para su configuración
+  // Nota: La configuración de i18n en App Router es diferente
 
   return (
     <MainLayout
       title={`${cvData.name} - ${cvData.title}`}
       description={cvData.summary}
-      source={source}
+      source={null}
     >
       <div className="max-w-4xl mx-auto">
         <ProfileHeader

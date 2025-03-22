@@ -1,0 +1,96 @@
+{
+  "locale": "es",
+  "language": {
+    "current": "Español",
+    "switch": "Cambiar idioma"
+  },
+  "theme": {
+    "switchToLight": "Cambiar a modo claro",
+    "switchToDark": "Cambiar a modo oscuro"
+  },
+  "actions": {
+    "downloadPDF": "Descargar PDF",
+    "printView": "Vista imprimible",
+    "contactMe": "Contáctame",
+    "goBack": "Volver",
+    "readMore": "Leer más"
+  },
+  "summary": "Resumen",
+  "remote": "Remoto",
+  "experience": {
+    "title": "Experiencia Profesional",
+    "subtitle": "Mi trayectoria profesional y experiencia laboral",
+    "present": "Presente",
+    "technologies": "Tecnologías utilizadas"
+  },
+  "education": {
+    "title": "Educación"
+  },
+  "skills": {
+    "title": "Habilidades Técnicas",
+    "categories": {
+      "frontend": "Frontend",
+      "backend": "Backend",
+      "devops": "DevOps",
+      "tools": "Herramientas"
+    }
+  },
+  "languages": {
+    "title": "Idiomas"
+  },
+  "softSkills": {
+    "title": "Habilidades Blandas"
+  },
+  "contact": {
+    "title": "Contacto",
+    "email": "Email",
+    "phone": "Teléfono",
+    "form": {
+      "name": "Nombre",
+      "email": "Email",
+      "message": "Mensaje",
+      "send": "Enviar mensaje",
+      "sending": "Enviando...",
+      "success": "Mensaje enviado correctamente!",
+      "error": "Error al enviar el mensaje. Inténtelo de nuevo."
+    }
+  },
+  "qrCode": {
+    "title": "Código QR",
+    "description": "Escanea este código QR para visitar mi CV online o compartirlo fácilmente.",
+    "download": "Descargar QR",
+    "tabs": {
+      "cv": "CV Online",
+      "linkedin": "LinkedIn",
+      "github": "GitHub"
+    }
+  },
+  "print": {
+    "title": "CV para Imprimir",
+    "printButton": "Imprimir",
+    "closeButton": "Cerrar"
+  },
+  "accessibility": {
+    "title": "Opciones de accesibilidad",
+    "toggleMenu": "Abrir menú de accesibilidad",
+    "closeMenu": "Cerrar menú de accesibilidad",
+    "highContrast": "Alto contraste",
+    "reduceMotion": "Reducir movimiento",
+    "increaseFontSize": "Aumentar tamaño de texto",
+    "keyboardFocus": "Resaltar foco del teclado",
+    "resetAll": "Restablecer opciones",
+    "skipToContent": "Saltar al contenido principal"
+  },
+  "errors": {
+    "loading": "Error al cargar los datos",
+    "tryAgain": "Por favor, intenta recargar la página",
+    "defaultTitle": "Ha ocurrido un error",
+    "defaultMessage": "Por favor, intenta de nuevo más tarde",
+    "retry": "Reintentar"
+  },
+  "footer": {
+    "allRightsReserved": "Todos los derechos reservados",
+    "builtWith": "Creado con",
+    "using": "usando"
+  }
+}
