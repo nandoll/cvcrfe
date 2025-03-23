@@ -5,19 +5,26 @@ import { ThemeProvider } from "@/components/context/ThemeContext";
 
 interface LanguageLayoutProps {
   children: React.ReactNode;
-  params: {
+  params: Promise<{
     lang: Locale;
-  };
+  }>;
 }
 
 export async function generateStaticParams() {
   return [{ lang: "es" }, { lang: "en" }];
 }
 
-export default async function LanguageLayout({
-  children,
-  params: { lang },
-}: LanguageLayoutProps) {
+export default async function LanguageLayout(props: LanguageLayoutProps) {
+  const params = await props.params;
+
+  const {
+    lang
+  } = params;
+
+  const {
+    children
+  } = props;
+
   // Cargar traducciones para el idioma actual
   const translations = {
     common: await getTranslations(lang, "common"),
