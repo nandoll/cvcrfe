@@ -15,11 +15,12 @@ import { cvService } from "@/services/cv.service";
 
 export const dynamicParams = false; // Solo permitir los idiomas pre-renderizados
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { lang: Locale };
-}) {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ lang: Locale }>;
+  }
+) {
+  const params = await props.params;
   const { lang } = params;
 
   return {
@@ -33,7 +34,8 @@ export async function generateMetadata({
 }
 
 // Página principal (componente del servidor por defecto)
-export default async function CVPage({ params }: { params: { lang: Locale } }) {
+export default async function CVPage(props: { params: Promise<{ lang: Locale }> }) {
+  const params = await props.params;
   const { lang } = params;
 
   // Obtener datos directamente (no use hooks en componentes del servidor)

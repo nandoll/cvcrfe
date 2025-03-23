@@ -1,7 +1,7 @@
 "use client";
 
 // src/app/[lang]/dashboard/page.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Loading } from "@/components/ui/Loading";
 import { useI18n } from "@/i18n/Provider";
@@ -28,12 +28,13 @@ import {
 } from "recharts";
 
 interface DashboardPageProps {
-  params: {
+  params: Promise<{
     lang: Locale;
-  };
+  }>;
 }
 
-export default function DashboardPage({ params }: DashboardPageProps) {
+export default function DashboardPage(props: DashboardPageProps) {
+  const params = use(props.params);
   const { lang } = params;
   const { t, loadNamespaces } = useI18n();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -54,7 +55,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
   // Cargar el namespace del dashboard
   useEffect(() => {
     loadNamespaces(["dashboard"]);
-  }, [loadNamespaces]);
+  }, []);
 
   // Colores para gráficos
   const COLORS = [
