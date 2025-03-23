@@ -157,6 +157,34 @@ export class AnalyticsService implements IAnalyticsService {
       ],
     };
   }
+
+  async trackVisit(source?: string): Promise<void> {
+    // Solo ejecutar en el cliente
+    if (typeof window === "undefined") return;
+
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/analytics/track`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          source,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          language: navigator.language,
+          referrer: document.referrer || "direct",
+          path: window.location.pathname,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to track visit: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error tracking visit:", error);
+    }
+  }
 }
 
 // Singleton para el servicio

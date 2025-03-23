@@ -20,7 +20,6 @@ export class CVService implements ICVService {
 
   async getCVData(lang: string): Promise<CVData> {
     try {
-      // Agregamos cacheo con revalidación
       const response = await fetch(`${this.apiBaseUrl}/cv/${lang}`, {
         next: {
           revalidate: 3600, // Revalidar cada hora
@@ -28,15 +27,12 @@ export class CVService implements ICVService {
       });
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch CV data: ${response.status} ${response.statusText}`
-        );
+        throw new Error(`Failed to fetch CV data: ${response.status}`);
       }
 
       return await response.json();
     } catch (error) {
       console.error("Error fetching CV data:", error);
-      // Fallback a datos locales en caso de error
       return this.getLocalCVData(lang);
     }
   }
