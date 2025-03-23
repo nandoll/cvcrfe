@@ -11,6 +11,7 @@ import { ContactSection } from "@/components/sections/Contact";
 import { LanguagesSection } from "@/components/sections/Languages";
 import { SoftSkillsSection } from "@/components/sections/SoftSkills";
 import { QRCodeGenerator } from "@/components/features/QRCodeGenerator";
+import { cvService } from "@/services/cv.service";
 
 export const dynamicParams = false; // Solo permitir los idiomas pre-renderizados
 
@@ -31,58 +32,12 @@ export async function generateMetadata({
   };
 }
 
-// Función para obtener datos del CV
-async function getCVData(lang: string) {
-  // Implementación para obtener datos
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/cv/${lang}` ||
-        `http://localhost:3001/cv/${lang}`,
-      { next: { revalidate: 3600 } } // Revalidar cada hora
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch CV data");
-    }
-
-    return response.json();
-  } catch (error) {
-    // Fallback a datos locales si la API no responde
-    return getMockCVData(lang);
-  }
-}
-
-function getMockCVData(lang: string) {
-  // Datos de ejemplo para desarrollo
-  return {
-    name: "Fernando Antezana",
-    title:
-      lang === "es"
-        ? "Desarrollador Frontend Senior"
-        : "Senior Frontend Developer",
-    summary:
-      lang === "es"
-        ? "Desarrollador Frontend con más de 5 años de experiencia..."
-        : "Frontend Developer with over 5 years of experience...",
-    // Añadir más datos mock según sea necesario
-    contact: {
-      email: "contacto@fernandoantezana.com",
-      phone: "+34 123 456 789",
-    },
-    experiences: [],
-    education: [],
-    skills: [],
-    languages: [],
-    softSkills: [],
-  };
-}
-
 // Página principal (componente del servidor por defecto)
 export default async function CVPage({ params }: { params: { lang: Locale } }) {
   const { lang } = params;
 
   // Obtener datos directamente (no use hooks en componentes del servidor)
-  const cvData = await getCVData(lang);
+  const cvData = await cvService.getCVData(lang);
 
   return (
     <MainLayout

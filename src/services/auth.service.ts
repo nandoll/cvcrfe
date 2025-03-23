@@ -52,9 +52,8 @@ export class AuthService implements IAuthService {
 
       const data = await response.json();
 
-      // Solo ejecutar localStorage en el cliente
+      // Guardar en localStorage
       if (typeof window !== "undefined") {
-        // Guardar en localStorage
         localStorage.setItem(this.tokenKey, data.access_token);
         if (data.refresh_token) {
           localStorage.setItem(this.refreshTokenKey, data.refresh_token);

@@ -97,6 +97,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
       setStats(data);
     } catch (error) {
       console.error("Error fetching stats:", error);
+      // Mostrar mensaje de error al usuario
     } finally {
       setIsDataLoading(false);
     }

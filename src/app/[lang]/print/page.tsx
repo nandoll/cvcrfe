@@ -1,35 +1,42 @@
 "use client";
 
 // src/app/[lang]/print/page.tsx
-import React, { useState, useEffect } from "react";
+import React, { use, useState, useEffect } from "react";
 import { Locale } from "@/i18n/config";
 import { Loading } from "@/components/ui/Loading";
 import { PrintLayout } from "@/components/layouts/PrintLayout";
 import { useI18n } from "@/i18n/Provider";
 import { cvService } from "@/services/cv.service";
 import { CVData } from "@/types/cv.types";
+// Redefinir el tipo de los parámetros para que incluyan Promise
+type AsyncParams<T> = Promise<T> & T;
 
 export const dynamic = "force-static";
 
 interface PrintablePageProps {
-  params: {
+  params: AsyncParams<{
     lang: Locale;
-  };
+  }>;
 }
 
 export default function PrintablePage({ params }: PrintablePageProps) {
-  const { lang } = params;
+  const resolvedParams = use(params);
+  const { lang } = resolvedParams;
   const { t, loadNamespaces } = useI18n();
   const [cvData, setCvData] = useState<CVData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+
+  // Si estás pasando el parámetro lang a otros componentes del cliente,
+  // mejor conviértelo a una prop regular
+  const langValue = lang;
 
   // Cargar datos del CV
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await cvService.getCVData(lang);
+        const data = await cvService.getCVData(langValue);
         setCvData(data);
         setError(null);
       } catch (err) {
@@ -40,7 +47,7 @@ export default function PrintablePage({ params }: PrintablePageProps) {
     };
 
     fetchData();
-  }, [lang]);
+  }, [langValue]);
 
   if (loading) {
     return <Loading />;
